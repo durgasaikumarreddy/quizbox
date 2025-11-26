@@ -170,7 +170,7 @@ class QuizzesControllerTest < ActionDispatch::IntegrationTest
 
     assert json_response.key?('quizzes')
     assert_equal 1, json_response['page']
-    assert_equal 1, json_response['pages']
+    assert_equal 1, json_response['total_pages']
     assert_equal 5, json_response['quizzes'].length
 
     # Verify structure of first quiz
@@ -188,8 +188,52 @@ class QuizzesControllerTest < ActionDispatch::IntegrationTest
     json_response = JSON.parse(response.body)
 
     assert_equal 2, json_response['page']
-    assert_equal 1, json_response['pages']
+    assert_equal 1, json_response['total_pages']
     assert_equal 0, json_response['quizzes'].length
+  end
+
+  # Show tests
+  test "should get quiz show" do
+    quiz = quizzes(:one)
+    get "/quizzes/#{quiz.id}"
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+
+    assert_equal quiz.id, json_response['id']
+    assert_equal quiz.title, json_response['title']
+    assert json_response.key?('questions')
+    assert json_response.key?('page')
+    assert json_response.key?('total_pages')
+    assert_equal 1, json_response['page']
+  end
+
+  test "should not get quiz show with invalid id" do
+    get '/quizzes/99999'
+
+    assert_response :not_found
+  end
+
+  test "should paginate questions in show" do
+    quiz = quizzes(:one)
+
+    # Page 1
+    get "/quizzes/#{quiz.id}", params: { page: 1 }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+
+    assert_equal 1, json_response['page']
+    assert json_response['questions'].length.positive?
+
+    # Page 2 (beyond available questions for quiz one)
+    get "/quizzes/#{quiz.id}", params: { page: 2 }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+
+    assert_equal 2, json_response['page']
+    assert_equal 0, json_response['questions'].length
   end
 
   private
