@@ -97,10 +97,6 @@ export default function CreateQuiz() {
           />
         </div>
 
-        <button type="button" className="add-question-btn" onClick={addQuestion}>
-          + Add Question
-        </button>
-
         <div className="questions-section">
           {questions.length > 0 && <h3>Questions ({questions.length})</h3>}
           {questions.map((q, i) => (
@@ -164,6 +160,10 @@ export default function CreateQuiz() {
             </div>
           ))}
         </div>
+        
+        <button type="button" className="add-question-btn" onClick={addQuestion}>
+          + Add Question
+        </button>
 
         <div className="button-group">
           <button type="submit" className="btn btn-primary" disabled={loading}>
