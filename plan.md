@@ -44,7 +44,7 @@
 
   * Rails API:
     `/admin/login` → returns JWT token
-    `/quizzes` → GET (randomized + paginated) / POST (admin only)
+    `/quizzes` → GET (paginated) / POST (admin only)
     `/quizzes/:id` → GET quiz with questions
     `/quizzes/:id/submit` → POST answers, return score + correct answers
 
@@ -57,3 +57,15 @@
     * `/quizzes`
     * `/quizzes/:id`
     * `/result`
+
+4. Change during implementation:
+  Original route: `/admin/create`
+  Updated route: `/quizzes/create`
+  Reason: More descriptive.
+
+5. Scalability:
+  * Support for full quiz CRUD operations (update, delete)
+  * Ability to capture basic user information when they take a quiz (name, email, etc.)
+  * Future-ready design for adding full user authentication (signup, login, progress)
+  * Store and track quiz results per user for analytics and leaderboards
+  * Can later extend to categories, difficulty levels, timed quizzes, and more
