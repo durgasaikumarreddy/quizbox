@@ -68,7 +68,7 @@ export default function CreateQuiz() {
       await API.post("/quizzes", payload);
       setSuccess("Quiz created successfully!");
       setTimeout(() => {
-        window.location.href = "/quizzes";
+        window.location.href = "/";
       }, 1500);
     } catch (err) {
       const message = err.response?.data?.errors?.join(", ") || "Error creating quiz";
