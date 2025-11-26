@@ -2,6 +2,7 @@ class QuizzesController < ApplicationController
   include JwtHelper
 
   before_action :authorize_admin, only: [:create]
+  before_action :find_quiz, only:[:show, :submit]
 
   # POST /quizzes (admin only)
   # Creates a new quiz with questions
@@ -59,20 +60,55 @@ class QuizzesController < ApplicationController
   #   total_pages: 2
   # }
   def show
-    quiz = Quiz.find(params[:id])
-    paginated_questions = quiz.questions.paginate(page: pagination_page, per_page: pagination_per_page)
+    paginated_questions = @quiz.questions.paginate(page: pagination_page, per_page: pagination_per_page)
 
     render json: {
-      id: quiz.id,
-      title: quiz.title,
-      created_at: quiz.created_at,
-      updated_at: quiz.updated_at,
+      id: @quiz.id,
+      title: @quiz.title,
+      created_at: @quiz.created_at,
+      updated_at: @quiz.updated_at,
       questions: paginated_questions,
       page: paginated_questions.current_page,
       total_pages: paginated_questions.total_pages
     }
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Quiz not found' }, status: :not_found
+  end
+
+  # POST /quizzes/:id/submit (public)
+  # Submits quiz answers and returns score and results
+  # Expects params:
+  # { answers: { question_id: "answer", ... } }
+  # Example response:
+  # {
+  #   score: 3,
+  #   total: 4,
+  #   results: [
+  #     { question_id: 1, correct: true, correct_answer: "A" },
+  #     ...
+  #   ]
+  # }
+  def submit
+    answers = params[:answers] || {}
+    score = 0
+    results = []
+
+    @quiz.questions.each do |question|
+      user_answer = answers[question.id.to_s]&.to_s&.strip || ''
+      correct_answer = question.correct_answer.to_s
+      is_correct = user_answer.downcase == correct_answer.downcase
+
+      score += 1 if is_correct
+      results << {
+        question_id: question.id,
+        correct: is_correct,
+        correct_answer: correct_answer
+      }
+    end
+
+    render json: {
+      score: score,
+      total: @quiz.questions.count,
+      results: results
+    }, status: :ok
   end
 
   private
@@ -90,5 +126,11 @@ class QuizzesController < ApplicationController
   # Expects nested attributes for questions
   def quiz_params
     params.require(:quiz).permit(:title, questions_attributes: [:text, :question_type, :correct_answer, options: []])
+  end
+
+  def find_quiz
+    @quiz = Quiz.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Quiz not found' }, status: :not_found
   end
 end
