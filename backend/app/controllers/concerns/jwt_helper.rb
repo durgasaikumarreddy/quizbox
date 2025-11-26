@@ -17,4 +17,10 @@ module JwtHelper
   rescue JWT::DecodeError
     nil
   end
+
+  # Authorize admin based on the decoded JWT token
+  def authorize_admin
+    decoded = decode_token
+    render json: { error: "Unauthorized" }, status: :unauthorized unless decoded && decoded["admin_id"]
+  end
 end
