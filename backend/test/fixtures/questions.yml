@@ -1,0 +1,45 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  quiz: one
+  text: What is the capital of France?
+  question_type: mc
+  options:
+    - Paris
+    - London
+    - Berlin
+  correct_answer: Paris
+
+two:
+  quiz: one
+  text: Is the Earth flat?
+  question_type: tf
+  options: []
+  correct_answer: "false"
+
+three:
+  quiz: two
+  text: What is the chemical symbol for gold?
+  question_type: mc
+  options:
+    - Au
+    - Ag
+    - Fe
+  correct_answer: Au
+
+four:
+  quiz: two
+  text: Photosynthesis is the process by which plants produce oxygen.
+  question_type: tf
+  options: []
+  correct_answer: "true"
+
+five:
+  quiz: three
+  text: In what year did World War II end?
+  question_type: mc
+  options:
+    - "1943"
+    - "1944"
+    - "1945"
+  correct_answer: "1945"

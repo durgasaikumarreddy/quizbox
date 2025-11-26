@@ -161,6 +161,37 @@ class QuizzesControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  # Index tests
+  test "should get index" do
+    get '/quizzes'
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+
+    assert json_response.key?('quizzes')
+    assert_equal 1, json_response['page']
+    assert_equal 1, json_response['pages']
+    assert_equal 5, json_response['quizzes'].length
+
+    # Verify structure of first quiz
+    first_quiz = json_response['quizzes'][0]
+    assert first_quiz.key?('id')
+    assert first_quiz.key?('title')
+    assert_equal 'General Knowledge Quiz', first_quiz['title']
+  end
+
+  test "should paginate index" do
+    # Request a page beyond available pages
+    get '/quizzes', params: { page: 2 }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+
+    assert_equal 2, json_response['page']
+    assert_equal 1, json_response['pages']
+    assert_equal 0, json_response['quizzes'].length
+  end
+
   private
 
   def encode_token(payload)
