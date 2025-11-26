@@ -15,6 +15,7 @@ export default function AdminLogin() {
     try {
       const res = await API.post("/admin/login", { email, password });
       localStorage.setItem("adminToken", res.data.token);
+      window.location.href="/quizzes/create";
     } catch (err) {
       const message = err.response?.data?.error;
       setError(message);
