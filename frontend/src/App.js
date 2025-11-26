@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminLogin from "./pages/AdminLogin";
 import CreateQuiz from "./pages/CreateQuiz";
+import QuizList from "./pages/QuizList";
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
       <Routes>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/quizzes/create" element={<CreateQuiz />} />
+        <Route path="/" element={<QuizList />} />
       </Routes>
     </BrowserRouter>
   );
