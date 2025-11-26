@@ -34,7 +34,7 @@ It allows public users to browse random quizzes and admins to create quiz conten
 ```
 quizbox/
 │
-├── backend/             # Rails 7 API-only backend
+├── backend/             # Rails 6.1 API-only backend
 │   ├── app/
 │   ├── config/
 │   ├── db/
@@ -53,7 +53,7 @@ quizbox/
 ## 🛠 Tech Stack
 
 ### Backend (Rails)
-- Ruby on Rails 7 (API mode)
+- Ruby on Rails 6.1 (API mode)
 - PostgreSQL
 - JWT Authentication
 - Will Paginate
