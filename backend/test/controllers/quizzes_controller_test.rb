@@ -236,6 +236,156 @@ class QuizzesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, json_response['questions'].length
   end
 
+  # Submit tests
+  test "should submit quiz with all correct answers" do
+    quiz = quizzes(:one)
+    question1 = quiz.questions.first
+    question2 = quiz.questions.second
+
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {
+          question1.id.to_s => question1.correct_answer,
+          question2.id.to_s => question2.correct_answer
+        }
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal 2, json_response['score']
+    assert_equal 2, json_response['total']
+    assert_equal 2, json_response['results'].length
+    assert_equal true, json_response['results'][0]['correct']
+    assert_equal true, json_response['results'][1]['correct']
+  end
+
+  test "should submit quiz with some correct answers" do
+    quiz = quizzes(:one)
+    q1 = Question.find_by(quiz_id: quiz.id, text: 'What is the capital of France?')
+    q2 = Question.find_by(quiz_id: quiz.id, text: 'Is the Earth flat?')
+
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {
+          q1.id.to_s => q1.correct_answer,
+          q2.id.to_s => 'Wrong Answer'
+        }
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal 1, json_response['score']
+    assert_equal 2, json_response['total']
+  end
+
+  test "should submit quiz with all incorrect answers" do
+    quiz = quizzes(:one)
+    question1 = quiz.questions.first
+    question2 = quiz.questions.second
+
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {
+          question1.id.to_s => 'Wrong1',
+          question2.id.to_s => 'Wrong2'
+        }
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal 0, json_response['score']
+    assert_equal 2, json_response['total']
+    json_response['results'].each do |result|
+      assert_equal false, result['correct']
+    end
+  end
+
+  test "should handle case-insensitive answers on submit" do
+    quiz = quizzes(:one)
+    question1 = quiz.questions.first
+    question2 = quiz.questions.second
+
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {
+          question1.id.to_s => question1.correct_answer.upcase,
+          question2.id.to_s => question2.correct_answer.upcase
+        }
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    # Both questions should match correctly even with uppercase
+    assert_equal true, json_response['results'][0]['correct']
+    assert_equal true, json_response['results'][1]['correct']
+  end
+
+  test "should handle whitespace in answers on submit" do
+    quiz = quizzes(:one)
+    question1 = quiz.questions.first
+    question2 = quiz.questions.second
+
+    # Submit both answers, one with whitespace
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {
+          question1.id.to_s => "  #{question1.correct_answer}  ",
+          question2.id.to_s => "  #{question2.correct_answer}  "
+        }
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    # Both questions should match correctly even with whitespace
+    assert_equal true, json_response['results'][0]['correct']
+    assert_equal true, json_response['results'][1]['correct']
+  end
+
+  test "should include correct answers in submit results" do
+    quiz = quizzes(:one)
+    question1 = quiz.questions.first
+    question2 = quiz.questions.second
+
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {
+          question1.id.to_s => 'Wrong',
+          question2.id.to_s => 'Wrong'
+        }
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    # Check that correct answers are included in results
+    assert json_response['results'][0].key?('correct_answer')
+    assert json_response['results'][1].key?('correct_answer')
+    assert_equal 'Paris', json_response['results'][0]['correct_answer']
+    assert_equal 'false', json_response['results'][1]['correct_answer']
+  end
+
+  test "should handle submit with missing answers" do
+    quiz = quizzes(:one)
+
+    post "/quizzes/#{quiz.id}/submit",
+      params: {
+        answers: {}
+      }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+    assert_equal 0, json_response['score']
+    assert_equal 2, json_response['total']
+  end
+
+  test "should not submit non-existent quiz" do
+    post '/quizzes/99999/submit',
+      params: {
+        answers: {}
+      }
+
+    assert_response :not_found
+  end
+
   private
 
   def encode_token(payload)
