@@ -389,6 +389,6 @@ class QuizzesControllerTest < ActionDispatch::IntegrationTest
   private
 
   def encode_token(payload)
-    JWT.encode(payload, Rails.application.secrets.secret_key.to_s, 'HS256')
+    JWT.encode(payload, Rails.application.secrets.secret_key_base.to_s, 'HS256')
   end
 end

@@ -1,5 +1,5 @@
 module JwtHelper
-  SECRET_KEY = Rails.application.secrets.secret_key.to_s
+  SECRET_KEY = Rails.application.secrets.secret_key_base.to_s
 
   # Encode a payload into a JWT token
   def encode_token(payload, exp = 24.hours.from_now)
