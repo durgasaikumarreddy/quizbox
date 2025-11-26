@@ -99,7 +99,9 @@ class QuizzesController < ApplicationController
       score += 1 if is_correct
       results << {
         question_id: question.id,
+        question_text: question.text,
         correct: is_correct,
+        user_answer: user_answer,
         correct_answer: correct_answer
       }
     end
