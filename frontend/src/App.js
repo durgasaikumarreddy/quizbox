@@ -3,6 +3,7 @@ import AdminLogin from "./pages/AdminLogin";
 import CreateQuiz from "./pages/CreateQuiz";
 import QuizList from "./pages/QuizList";
 import QuizDetail from "./pages/QuizDetail";
+import Results from "./pages/Results";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/quizzes/create" element={<CreateQuiz />} />
         <Route path="/" element={<QuizList />} />
         <Route path="/quizzes/:id" element={<QuizDetail />} />
+        <Route path="/results" element={<Results />} />
       </Routes>
     </BrowserRouter>
   );
