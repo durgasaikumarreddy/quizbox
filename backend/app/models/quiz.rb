@@ -1,10 +1,10 @@
 class Quiz < ApplicationRecord
-  has_many :questions, dependent: :destroy
+  has_many :questions, dependent: :destroy, inverse_of: :quiz
   accepts_nested_attributes_for :questions
 
   validates :title, presence: true
-  validates :must_have_at_least_one_question
-  validates :all_questions_must_be_valid
+  validate :must_have_at_least_one_question
+  validate :all_questions_must_be_valid
 
   private
 
@@ -21,7 +21,7 @@ class Quiz < ApplicationRecord
       next if question.valid?
 
       question.errors.full_messages.each do |msg|
-        errors.add(:quiz, "Question #{index + 1}: #{msg}")
+        errors.add(:question, "#{index + 1}: #{msg}")
       end
     end
   end
