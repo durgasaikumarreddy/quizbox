@@ -35,18 +35,56 @@ class QuizzesController < ApplicationController
   #   pages: 5
   # }
   def index
-    page = params[:page] || 1
-    per_page = 10
-    paginated_quizzes = Quiz.paginate(page: page, per_page: per_page)
+    paginated_quizzes = Quiz.paginate(page: pagination_page, per_page: pagination_per_page)
 
     render json: {
       quizzes: paginated_quizzes,
       page: paginated_quizzes.current_page,
-      pages: paginated_quizzes.total_pages
+      total_pages: paginated_quizzes.total_pages
     }
   end
 
+  # GET /quizzes/:id (public)
+  # Returns quiz details including paginated questions
+  # Query params: page (default: 1)
+  # Example response:
+  # {
+  #   id: 1,
+  #   title: "Sample Quiz",
+  #   questions: [
+  #     { id: 1, text: "Question 1", question_type: "mc", options: ["A", "B", "C"], correct_answer: "A" },
+  #     ...
+  #   ],
+  #   page: 1,
+  #   total_pages: 2
+  # }
+  def show
+    quiz = Quiz.find(params[:id])
+    paginated_questions = quiz.questions.paginate(page: pagination_page, per_page: pagination_per_page)
+
+    render json: {
+      id: quiz.id,
+      title: quiz.title,
+      created_at: quiz.created_at,
+      updated_at: quiz.updated_at,
+      questions: paginated_questions,
+      page: paginated_questions.current_page,
+      total_pages: paginated_questions.total_pages
+    }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Quiz not found' }, status: :not_found
+  end
+
   private
+
+  # Pagination helpers
+  def pagination_page
+    params[:page] || 1
+  end
+
+  def pagination_per_page
+    10
+  end
 
   # Strong parameters for quiz creation
   # Expects nested attributes for questions
