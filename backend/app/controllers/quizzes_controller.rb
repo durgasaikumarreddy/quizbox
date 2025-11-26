@@ -25,6 +25,27 @@ class QuizzesController < ApplicationController
     end
   end
 
+  # GET /quizzes (public)
+  # Returns paginated list of quizzes
+  # Query params: page (default: 1)
+  # Example response:
+  # {
+  #   quizzes: [ { id: 1, title: "Sample Quiz" }, ... ],
+  #   page: 1,
+  #   pages: 5
+  # }
+  def index
+    page = params[:page] || 1
+    per_page = 10
+    paginated_quizzes = Quiz.paginate(page: page, per_page: per_page)
+
+    render json: {
+      quizzes: paginated_quizzes,
+      page: paginated_quizzes.current_page,
+      pages: paginated_quizzes.total_pages
+    }
+  end
+
   private
 
   # Strong parameters for quiz creation
