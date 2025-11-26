@@ -1,0 +1,169 @@
+require 'test_helper'
+
+class QuizzesControllerTest < ActionDispatch::IntegrationTest
+  def setup
+    @admin = admins(:one)
+  end
+
+  # Create quiz tests
+  test "should create quiz as admin" do
+    token = encode_token({ admin_id: @admin.id })
+
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: 'New Quiz',
+          questions_attributes: [
+            {
+              text: 'Question 1',
+              question_type: 'mc',
+              options: ['A', 'B', 'C'],
+              correct_answer: 'A'
+            }
+          ]
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :created
+    json_response = JSON.parse(response.body)
+    assert_equal 'New Quiz', json_response['title']
+  end
+
+  test "should not create quiz without authorization" do
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: 'New Quiz',
+          questions_attributes: []
+        }
+      }
+
+    assert_response :unauthorized
+  end
+
+  test "should not create quiz with invalid params" do
+    token = encode_token({ admin_id: @admin.id })
+
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: '',
+          questions_attributes: []
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :unprocessable_entity
+    json_response = JSON.parse(response.body)
+    assert json_response.key?('errors')
+  end
+
+  test "should not create quiz without title" do
+    token = encode_token({ admin_id: @admin.id })
+
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: '',
+          questions_attributes: [
+            { text: 'Q', question_type: 'mc', options: ['A'], correct_answer: 'A' }
+          ]
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :unprocessable_entity
+    json_response = JSON.parse(response.body)
+    assert_includes json_response['errors'].join(', '), "Title can't be blank"
+  end
+
+  test "should not create quiz without any questions" do
+    token = encode_token({ admin_id: @admin.id })
+
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: 'No Questions',
+          questions_attributes: []
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :unprocessable_entity
+    json_response = JSON.parse(response.body)
+    # Custom validation adds an error message on quiz
+    assert_match %r{must have at least one question}i, json_response['errors'].join(', ')
+  end
+
+  test "should not create quiz when a question is invalid (missing text)" do
+    token = encode_token({ admin_id: @admin.id })
+
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: 'Bad Question',
+          questions_attributes: [
+            { text: '', question_type: 'mc', options: ['A'], correct_answer: 'A' }
+          ]
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :unprocessable_entity
+    json_response = JSON.parse(response.body)
+    # The quiz aggregates question errors with a prefix like 'Quiz Question 1: Text can't be blank'
+    assert_match(
+      %r{Question 1: .*Text can't be blank|Question 1: .*text can't be blank}i,
+      json_response['errors'].join(', ')
+    )
+  end
+
+  test "should not create quiz when question has invalid type or missing options" do
+    token = encode_token({ admin_id: @admin.id })
+
+    # invalid question_type
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: 'Invalid Type',
+          questions_attributes: [
+            { text: 'Q', question_type: 'invalid_type', options: ['A'], correct_answer: 'A' }
+          ]
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :unprocessable_entity
+    json_response = JSON.parse(response.body)
+    assert_match(
+      %r{Question 1: .*included in the list|Question 1: .*is not included in the list}i,
+      json_response['errors'].join(', ')
+    )
+
+    # missing options for mc question
+    post '/quizzes',
+      params: {
+        quiz: {
+          title: 'No Options',
+          questions_attributes: [
+            { text: 'Q', question_type: 'mc', options: [], correct_answer: 'A' }
+          ]
+        }
+      },
+      headers: { 'Authorization' => "Bearer #{token}" }
+
+    assert_response :unprocessable_entity
+    json_response = JSON.parse(response.body)
+    assert_match(
+      %r{Question 1: .*Options can't be blank|Question 1: .*options can't be blank}i,
+      json_response['errors'].join(', ')
+    )
+  end
+
+  private
+
+  def encode_token(payload)
+    JWT.encode(payload, Rails.application.secrets.secret_key.to_s, 'HS256')
+  end
+end
