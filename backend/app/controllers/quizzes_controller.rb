@@ -30,6 +30,6 @@ class QuizzesController < ApplicationController
   # Strong parameters for quiz creation
   # Expects nested attributes for questions
   def quiz_params
-    params.require(:quiz).permit(:title, questions_attributes: [:text, :question_type, :options, :correct_answer])
+    params.require(:quiz).permit(:title, questions_attributes: [:text, :question_type, :correct_answer, options: []])
   end
 end
